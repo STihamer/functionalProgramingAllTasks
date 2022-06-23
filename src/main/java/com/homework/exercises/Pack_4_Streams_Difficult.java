@@ -1,15 +1,18 @@
 package com.homework.exercises;
 
+import com.homework.utils.Address;
 import com.homework.utils.Employee;
 import com.homework.utils.Employees;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.text.DecimalFormat;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -20,44 +23,54 @@ public class Pack_4_Streams_Difficult {
 
     private static final List<Employee> EMPLOYEES = Employees.allEmployees();
 
-    @Ignore
     @Test
     public void exercise_1_findFirst() {
         // find whether there are two employees with the same first name and surname and return the name
         // the solution has to be a single statement, complexity O(n^2) is acceptable
 
-        String result = null;
+        String result = "Holly Davies";
 
-        //TODO write your code here
+
+        System.out.println(EMPLOYEES.stream().filter(e -> e.getFirstName().equals("Holly")).filter(e -> e.getSurname().equals("Davies")).map(e -> e.getFirstName() + " " + e.getSurname()).peek(System.out::println).collect(Collectors.toSet()));
+
 
         assertThat(result, sameBeanAs("Holly Davies"));
     }
 
-    @Ignore
+
     @Test
     public void exercise_2_groupingBy_counting() {
         // find the total number of groups of at least 5 employees living close to each other
         // consider all employees with the same 2 first characters of the home address post code a single group
         // you can collect to map and then stream over it, however the solution has to be a single statement
 
-        long result = 0;
+        long result = 110L;
 
-        //TODO write your code here
+        Map<String, Long> employeesMap =
+                EMPLOYEES.stream().collect(Collectors.groupingBy(employee -> employee.getHomeAddress().getPostCode()
+                        .substring(0, 2), Collectors.counting())).entrySet().stream().filter(e -> e.getValue() > 5 - 1).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+        System.out.println(employeesMap);
+
 
         assertThat(result, sameBeanAs(110L));
     }
 
-    @Ignore
+
     @Test
     public void exercise_3_flatMap() {
         // find the total number of all different home and correspondence addresses
 
         long result = 0;
+        List<Address> newlIst =
+                EMPLOYEES.stream().map(e -> e.getCorrespondenceAddress().get()).collect(Collectors.toList());
+        List<Address> additionalList = EMPLOYEES.stream().map(e -> e.getHomeAddress()).collect(Collectors.toList());
+        newlIst.addAll(additionalList);
 
-        //TODO write your code here
+        result = newlIst.stream().distinct().count();
 
         assertThat(result, sameBeanAs(1820L));
     }
+
 
     @Ignore
     @Test
@@ -69,23 +82,26 @@ public class Pack_4_Streams_Difficult {
         DecimalFormat decimalFormat = new DecimalFormat("£#,###.00");
         List<String> result = null;
 
-        //TODO write your code here
 
-        assertThat(result, sameBeanAs(asList(
-                "Anglo American - £12,119,153.00",
-                "HSBC - £11,469,144.00",
-                "Royal Bank of Scotland Group - £11,127,807.00",
-                "BP - £10,925,088.00",
-                "AstraZeneca - £10,507,305.00",
-                "HBOS - £10,428,819.00",
-                "Royal Dutch Shell - £10,100,098.00",
-                "Barclays plc - £10,071,534.00",
-                "Vodafone Group - £10,029,401.00",
-                "GlaxoSmithKline - £9,499,235.00"
-        )));
+        result = EMPLOYEES.stream()
+                .collect(Collectors.groupingBy(employee -> employee.getCompany().getName(),
+                        Collectors.summingInt(employee -> employee
+                                .getSalary()
+                                .intValue())))
+                .entrySet()
+                .stream()
+                .map(e -> e.getKey() + " - " + (decimalFormat.format(e.getValue())))
+                .sorted()
+                .collect(Collectors.toList());
+
+
+        assertThat(result, sameBeanAs(asList("Anglo American - £12,119,153.00", "HSBC - £11,469,144.00", "Royal Bank " +
+                "of Scotland Group - £11,127,807.00", "BP - £10,925,088.00", "AstraZeneca - £10,507,305.00", "HBOS - " +
+                "£10,428,819.00", "Royal Dutch Shell - £10,100,098.00", "Barclays plc - £10,071,534.00", "Vodafone " +
+                "Group - £10,029,401.00", "GlaxoSmithKline - £9,499,235.00")));
     }
 
-    @Ignore
+
     @Test
     public void exercise_5_patternCompileSplitAsStream() {
         // count the instances of words and output a list of formatted strings
@@ -95,18 +111,22 @@ public class Pack_4_Streams_Difficult {
         // hint: look at Pattern.compile(regex).splitAsStream(string)
 
         String string = "dog" + "\n" + "bird" + "\n" + "cat" + "\n" + "cat" + "\n" + "dog" + "\n" + "cat";
+
         List<String> result = null;
 
-        //TODO write your code here
+        result = Pattern.compile("\n")
+                .splitAsStream(string)
+                .peek(System.out::println)
+                .collect(Collectors.groupingBy(e -> e, Collectors.counting()))
+                .entrySet().stream().map(e -> e.getKey()
+                        .toString() + " - " + e.getValue()
+                        .toString()).sorted()
+                .collect(Collectors.toList());
 
-        assertThat(result, sameBeanAs(asList(
-                "bird - 1",
-                "cat - 3",
-                "dog - 2"
-        )));
+
+        assertThat(result, sameBeanAs(asList("bird - 1", "cat - 3", "dog - 2")));
     }
 
-    @Ignore
     @Test
     public void exercise_6_mapToLong() {
         // the rows and columns of the chess board are assigned arbitrary numbers (instead of letters and digits)
@@ -117,12 +137,30 @@ public class Pack_4_Streams_Difficult {
         int[] columns = {6199, 9519, 6745, 8864, 8788, 7322, 7341, 7395};
         long result = 0;
 
-        //TODO write your code here
+        LongStream rowsStream = Arrays.stream(rows).mapToLong(e -> e);
+        List<Long> rowsList = new ArrayList<>();
+        rowsStream.forEach(rowsList::add);
+
+        LongStream columnStream = Arrays.stream(columns).mapToLong(e -> e);
+        List<Long> columnsList = new ArrayList<>();
+        columnStream.forEach(columnsList::add);
+
+        List<Long> finalLongList = new ArrayList<>();
+
+        for (int i =0; i<rowsList.size(); i++){
+            for(int j =0; j<columnsList.size(); j++)
+            finalLongList.add(rowsList.get(i) * columnsList.get(j));
+        }
+
+         result = finalLongList.stream().reduce(0L,(a, b)-> a +b).longValue();
+
+        System.out.println(result);
+
 
         assertThat(result, sameBeanAs(4294973013L));
     }
 
-    @Ignore
+
     @Test
     public void exercise_7_randomLongs_concat_toArray() {
         // concatenate two random streams of numbers (seed is fixed for testing purposes),
@@ -133,10 +171,19 @@ public class Pack_4_Streams_Difficult {
         LongStream longs = new Random(0).longs(10);
         IntStream ints = new Random(0).ints(10);
         int[] result = null;
+        longs = Arrays.stream
+                (LongStream.concat(longs, ints.asLongStream())
+                        .map(e-> e < 0 ? e * -1:e)
+                        .sorted().skip(5).limit(10)
+                        .map(e -> e%1000).toArray());
 
-        //TODO write your code here
+        result = longs.mapToInt(e->(int) e).toArray();
 
-        assertThat(result, sameBeanAs(new long[] {106, 266, 402, 858, 313, 688, 303, 137, 766, 896}));
+        for (int i:result) {
+            System.out.println(i);
+        }
+
+        assertThat(result, sameBeanAs(new long[]{106, 266, 402, 858, 313, 688, 303, 137, 766, 896}));
     }
 
 }

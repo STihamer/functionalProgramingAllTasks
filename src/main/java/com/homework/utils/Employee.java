@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.Optional;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -55,5 +56,6 @@ public class Employee {
     public Optional<Address> getCorrespondenceAddress() {
         return correspondenceAddress;
     }
+
 
 }
